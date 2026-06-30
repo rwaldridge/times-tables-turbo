@@ -354,6 +354,81 @@
   }
   @keyframes speedLine { from{left:18vw;width:0;opacity:1} to{left:0;width:18vw;opacity:0} }
 
+  /* ── VICTORY LAP ── */
+  #victoryLapScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #87ceeb 0%, #c8e6c9 55%, #3a7d44 55%, #3a7d44 100%);
+    padding: 20px;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .vl-title {
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 3px 3px 0 #e65100, -1px -1px 0 #e65100;
+    text-align: center;
+    z-index: 5;
+    letter-spacing: 1px;
+  }
+  .vl-subtitle {
+    font-size: 0.95rem;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+    text-align: center;
+    margin-top: -6px;
+    z-index: 5;
+  }
+  .vl-track-wrap {
+    width: min(94vw, 520px);
+    position: relative;
+  }
+  .vl-track-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 18px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+  }
+  .vl-winner-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    background: linear-gradient(135deg, var(--gold), #ff9f43);
+    color: #333;
+    font-weight: 900;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    padding: 14px 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.4s;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .vl-winner-banner.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  .vl-skip {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 8px 22px;
+    cursor: pointer;
+    z-index: 5;
+    transition: background 0.2s;
+  }
+  .vl-skip:hover { background: rgba(255,255,255,0.3); }
+
   /* ── RESULT SCREEN ── */
   #resultScreen {
     flex-direction: column;
@@ -633,6 +708,43 @@
   <div class="flash-wrong"   id="flashWrong"></div>
 </div>
 
+<!-- ═══ VICTORY LAP ═══ -->
+<div id="victoryLapScreen" class="screen">
+  <div class="vl-title">🏁 Victory Lap!</div>
+  <div class="vl-subtitle" id="vlSubtitle">Show off your new ride!</div>
+  <div class="vl-track-wrap">
+    <svg class="vl-track-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- field grass -->
+      <rect width="500" height="280" fill="#3a7d44"/>
+      <!-- road (outer stadium) -->
+      <path d="M 140,0 H 360 A 140,140 0 0 1 360,280 H 140 A 140,140 0 0 1 140,0 Z" fill="#555"/>
+      <!-- dashed road centre lines -->
+      <path d="M 140,25 H 360 A 115,115 0 0 1 360,255 H 140 A 115,115 0 0 1 140,25 Z"
+            fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-dasharray="10,10"/>
+      <!-- inner grass island -->
+      <path d="M 140,50 H 360 A 90,90 0 0 1 360,230 H 140 A 90,90 0 0 1 140,50 Z" fill="#3a7d44"/>
+      <!-- finish line: checker pattern across the road -->
+      <defs>
+        <pattern id="vlChecker" x="0" y="0" width="6" height="12" patternUnits="userSpaceOnUse">
+          <rect width="3" height="6" fill="#000"/>
+          <rect x="3" y="6" width="3" height="6" fill="#000"/>
+        </pattern>
+      </defs>
+      <rect x="246" y="0" width="8" height="50" fill="#fff"/>
+      <rect x="246" y="0" width="8" height="50" fill="url(#vlChecker)"/>
+      <!-- invisible lane paths (clockwise from finish line) -->
+      <path id="vlLane1" d="M 250,6  H 360 A 134,134 0 0 1 360,274 H 140 A 134,134 0 0 1 140,6  Z" fill="none"/>
+      <path id="vlLane2" d="M 250,18 H 360 A 122,122 0 0 1 360,262 H 140 A 122,122 0 0 1 140,18 Z" fill="none"/>
+      <path id="vlLane3" d="M 250,30 H 360 A 110,110 0 0 1 360,250 H 140 A 110,110 0 0 1 140,30 Z" fill="none"/>
+      <path id="vlLane4" d="M 250,42 H 360 A 98,98   0 0 1 360,238 H 140 A 98,98   0 0 1 140,42 Z" fill="none"/>
+      <!-- racers injected here -->
+      <g id="vlCarsGroup"></g>
+    </svg>
+    <div class="vl-winner-banner" id="vlWinnerBanner">🏆 YOU WIN! 🏆</div>
+  </div>
+  <button class="vl-skip" id="vlSkipBtn">Skip ▶</button>
+</div>
+
 <!-- ═══ RESULT ═══ -->
 <div id="resultScreen" class="screen">
   <div class="result-trophy" id="resultTrophy">🏆</div>
@@ -726,7 +838,7 @@ let garageReturnTo     = 'menu';
 
 // ─── DOM ─────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const screens = { menu: menuScreen, game: gameScreen, result: resultScreen, score: scoreScreen, garage: garageScreen };
+const screens = { menu: menuScreen, game: gameScreen, result: resultScreen, score: scoreScreen, garage: garageScreen, victoryLap: victoryLapScreen };
 
 function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -956,7 +1068,14 @@ function handleAnswer(chosen, btn) {
     spawnSpeedLines();
     boostCar();
     $('progressFill').style.width = state.progress + '%';
-    if (state.progress >= 100) { setTimeout(endGame, 600); return; }
+    if (state.progress >= 100) {
+      setTimeout(() => {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+        showVictoryLap(endGame);
+      }, 600);
+      return;
+    }
   } else {
     state.wrong++;
     state.streak = 0;
@@ -1009,6 +1128,86 @@ function boostCar() {
   const car = $('playerCar');
   car.style.transform = 'scaleX(-1) scaleY(1.12) translateX(-8px)';
   setTimeout(() => car.style.transform = 'scaleX(-1)', 250);
+}
+
+// ─── VICTORY LAP ─────────────────────────────────────────────────────────────
+// Plays after race completion: player's just-earned car races the rest of their
+// garage around a top-down oval and wins by a clear margin, then hands off to
+// the result screen.
+const SVG_NS   = 'http://www.w3.org/2000/svg';
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
+
+function showVictoryLap(onComplete) {
+  const playerCarIdx = carIndexForTables(state.tables);
+  // Garage hasn't been updated yet — endGame will mark this car NEW. Opponents
+  // are picked from cars unlocked before this race.
+  const previouslyUnlocked = loadGarage();
+  const opponents = [...previouslyUnlocked]
+    .filter(i => i !== playerCarIdx)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  $('vlSubtitle').textContent = opponents.length === 0
+    ? 'A solo lap in your new ride!'
+    : 'Race the rest of your collection!';
+
+  const banner = $('vlWinnerBanner');
+  banner.classList.remove('show');
+  banner.textContent = `🏆 ${state.name || 'YOU'} WINS! 🏆`;
+
+  // Lanes 1 (outermost) → 4 (innermost). Player in lane 2 — clearly visible,
+  // shortest duration → wins.
+  const racers = [
+    { lane: '#vlLane2', emoji: CARS[playerCarIdx].emoji, dur: 4.0, isPlayer: true },
+  ];
+  const oppLanes = ['#vlLane1', '#vlLane3', '#vlLane4'];
+  const oppDurs  = [4.6, 5.0, 5.4];
+  opponents.forEach((carIdx, i) => {
+    racers.push({ lane: oppLanes[i], emoji: CARS[carIdx].emoji, dur: oppDurs[i], isPlayer: false });
+  });
+
+  const group = $('vlCarsGroup');
+  group.innerHTML = '';
+  racers.forEach(r => {
+    const g = document.createElementNS(SVG_NS, 'g');
+
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('font-size', r.isPlayer ? '26' : '22');
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'central');
+    // Emojis natively face left; flip so they face direction of travel.
+    text.setAttribute('transform', 'scale(-1, 1)');
+    if (r.isPlayer) text.setAttribute('filter', 'drop-shadow(0 0 5px gold)');
+    text.textContent = r.emoji;
+
+    const motion = document.createElementNS(SVG_NS, 'animateMotion');
+    motion.setAttribute('dur', r.dur + 's');
+    motion.setAttribute('repeatCount', '1');
+    motion.setAttribute('rotate', 'auto');
+    motion.setAttribute('fill', 'freeze');
+
+    const mpath = document.createElementNS(SVG_NS, 'mpath');
+    mpath.setAttributeNS(XLINK_NS, 'xlink:href', r.lane);
+    mpath.setAttribute('href', r.lane);
+
+    motion.appendChild(mpath);
+    g.appendChild(motion);
+    g.appendChild(text);
+    group.appendChild(g);
+  });
+
+  showScreen('victoryLap');
+
+  // Pop winner banner just after player crosses the line.
+  const winnerTimeout = setTimeout(() => banner.classList.add('show'), 4100);
+  // Hand off to the result screen a beat later.
+  const finishTimeout = setTimeout(() => onComplete(), 5800);
+
+  $('vlSkipBtn').onclick = () => {
+    clearTimeout(winnerTimeout);
+    clearTimeout(finishTimeout);
+    onComplete();
+  };
 }
 
 // ─── END GAME ────────────────────────────────────────────────────────────────
