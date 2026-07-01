@@ -1166,8 +1166,12 @@ function showVictoryLap(onComplete) {
     racers.push({ lane: oppLanes[i], emoji: CARS[carIdx].emoji, dur: oppDurs[i], isPlayer: false });
   });
 
+  // Show the screen first so the SVG is rendering before we add animations to it.
+  showScreen('victoryLap');
+
   const group = $('vlCarsGroup');
   group.innerHTML = '';
+  const animations = [];
   racers.forEach(r => {
     const g = document.createElementNS(SVG_NS, 'g');
 
@@ -1185,6 +1189,11 @@ function showVictoryLap(onComplete) {
     motion.setAttribute('repeatCount', '1');
     motion.setAttribute('rotate', 'auto');
     motion.setAttribute('fill', 'freeze');
+    // Don't start until we call beginElement — otherwise the default
+    // begin="0s" anchors to the SVG document timeline (which started on page
+    // load), so by the time the player finishes a race the animation is
+    // treated as already completed and the car appears frozen on the line.
+    motion.setAttribute('begin', 'indefinite');
 
     const mpath = document.createElementNS(SVG_NS, 'mpath');
     mpath.setAttributeNS(XLINK_NS, 'xlink:href', r.lane);
@@ -1194,9 +1203,14 @@ function showVictoryLap(onComplete) {
     g.appendChild(motion);
     g.appendChild(text);
     group.appendChild(g);
+    animations.push(motion);
   });
 
-  showScreen('victoryLap');
+  // Kick the animations off on the next frame so the browser has laid the
+  // SVG out before we start them.
+  requestAnimationFrame(() => {
+    animations.forEach(a => { try { a.beginElement(); } catch (e) {} });
+  });
 
   // Pop winner banner just after player crosses the line.
   const winnerTimeout = setTimeout(() => banner.classList.add('show'), 4100);
