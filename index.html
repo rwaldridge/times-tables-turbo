@@ -141,6 +141,8 @@
   .diff-btn[data-diff="medium"].selected { background: #ff9800; }
   .diff-btn[data-diff="hard"].selected   { background: #f44336; }
 
+  .mode-btn.selected { background: #5c6bc0; color: white; border-color: transparent; }
+
   .start-btn {
     width: 100%;
     padding: 14px;
@@ -354,81 +356,6 @@
   }
   @keyframes speedLine { from{left:18vw;width:0;opacity:1} to{left:0;width:18vw;opacity:0} }
 
-  /* ── VICTORY LAP ── */
-  #victoryLapScreen {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(180deg, #87ceeb 0%, #c8e6c9 55%, #3a7d44 55%, #3a7d44 100%);
-    padding: 20px;
-    gap: 16px;
-    overflow: hidden;
-  }
-  .vl-title {
-    font-size: clamp(1.6rem, 5vw, 2.6rem);
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 3px 3px 0 #e65100, -1px -1px 0 #e65100;
-    text-align: center;
-    z-index: 5;
-    letter-spacing: 1px;
-  }
-  .vl-subtitle {
-    font-size: 0.95rem;
-    color: #fff;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
-    text-align: center;
-    margin-top: -6px;
-    z-index: 5;
-  }
-  .vl-track-wrap {
-    width: min(94vw, 520px);
-    position: relative;
-  }
-  .vl-track-svg {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 18px;
-    box-shadow: 0 12px 24px rgba(0,0,0,0.35);
-  }
-  .vl-winner-banner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.5);
-    background: linear-gradient(135deg, var(--gold), #ff9f43);
-    color: #333;
-    font-weight: 900;
-    font-size: clamp(1.1rem, 4vw, 1.6rem);
-    padding: 14px 28px;
-    border-radius: 18px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.4s;
-    letter-spacing: 1px;
-    white-space: nowrap;
-    z-index: 10;
-  }
-  .vl-winner-banner.show {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  .vl-skip {
-    background: rgba(255,255,255,0.18);
-    color: white;
-    border: 2px solid rgba(255,255,255,0.4);
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    padding: 8px 22px;
-    cursor: pointer;
-    z-index: 5;
-    transition: background 0.2s;
-  }
-  .vl-skip:hover { background: rgba(255,255,255,0.3); }
-
   /* ── RESULT SCREEN ── */
   #resultScreen {
     flex-direction: column;
@@ -637,6 +564,69 @@
   .garage-car-lock { font-size: 1rem; position: absolute; top: 8px; right: 10px; opacity: 0.3; }
   .garage-car.unlocked .garage-car-lock { display: none; }
   .garage-count { font-size: 0.85rem; opacity: 0.6; margin-bottom: 16px; }
+
+  /* ── VICTORY LAP OVERLAY ── */
+  #victoryOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .victory-title {
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.9), 3px 3px 0 #e65100;
+    letter-spacing: 4px;
+    animation: victoryPulse 0.35s ease-in-out infinite alternate;
+    text-align: center;
+    z-index: 10;
+  }
+  .victory-subtitle {
+    font-size: 1.3rem;
+    color: #fff;
+    margin-top: 10px;
+    opacity: 0.85;
+    z-index: 10;
+  }
+  @keyframes victoryPulse { to { transform: scale(1.06) rotate(-1deg); } }
+  .victory-track {
+    width: 100%;
+    height: 90px;
+    position: relative;
+    overflow: hidden;
+    margin: 24px 0;
+    background: rgba(255,255,255,0.05);
+    border-top: 3px dashed rgba(255,255,255,0.2);
+    border-bottom: 3px dashed rgba(255,255,255,0.2);
+  }
+  .victory-car {
+    position: absolute;
+    font-size: 3.5rem;
+    top: 50%;
+  }
+  @keyframes vZoomRight {
+    from { left: -15%; transform: translateY(-50%); }
+    to   { left: 115%; transform: translateY(-50%); }
+  }
+  @keyframes vZoomLeft {
+    from { left: 115%; transform: translateY(-50%) scaleX(-1); }
+    to   { left: -15%; transform: translateY(-50%) scaleX(-1); }
+  }
+  .confetti-piece {
+    position: absolute;
+    animation: confettiFall linear forwards;
+    pointer-events: none;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-10px) rotate(0deg);   opacity: 1; }
+    100% { transform: translateY(102vh) rotate(900deg); opacity: 0; }
+  }
 </style>
 </head>
 <body>
@@ -662,6 +652,13 @@
       <button class="diff-btn selected" data-diff="easy">🟢 Easy<br><small>180s</small></button>
       <button class="diff-btn" data-diff="medium">🟡 Medium<br><small>60s</small></button>
       <button class="diff-btn" data-diff="hard">🔴 Hard<br><small>45s</small></button>
+    </div>
+
+    <label>Operation</label>
+    <div class="difficulty-row">
+      <button class="diff-btn mode-btn selected" data-mode="multiply">✖️ Multiply</button>
+      <button class="diff-btn mode-btn" data-mode="divide">➗ Divide</button>
+      <button class="diff-btn mode-btn" data-mode="both">✖️➗ Both</button>
     </div>
 
     <button class="start-btn" id="startBtn" disabled>🏁 Start Race!</button>
@@ -706,43 +703,6 @@
   </div>
   <div class="flash-correct" id="flashCorrect"></div>
   <div class="flash-wrong"   id="flashWrong"></div>
-</div>
-
-<!-- ═══ VICTORY LAP ═══ -->
-<div id="victoryLapScreen" class="screen">
-  <div class="vl-title">🏁 Victory Lap!</div>
-  <div class="vl-subtitle" id="vlSubtitle">Show off your new ride!</div>
-  <div class="vl-track-wrap">
-    <svg class="vl-track-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
-      <!-- field grass -->
-      <rect width="500" height="280" fill="#3a7d44"/>
-      <!-- road (outer stadium) -->
-      <path d="M 140,0 H 360 A 140,140 0 0 1 360,280 H 140 A 140,140 0 0 1 140,0 Z" fill="#555"/>
-      <!-- dashed road centre lines -->
-      <path d="M 140,25 H 360 A 115,115 0 0 1 360,255 H 140 A 115,115 0 0 1 140,25 Z"
-            fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-dasharray="10,10"/>
-      <!-- inner grass island -->
-      <path d="M 140,50 H 360 A 90,90 0 0 1 360,230 H 140 A 90,90 0 0 1 140,50 Z" fill="#3a7d44"/>
-      <!-- finish line: checker pattern across the road -->
-      <defs>
-        <pattern id="vlChecker" x="0" y="0" width="6" height="12" patternUnits="userSpaceOnUse">
-          <rect width="3" height="6" fill="#000"/>
-          <rect x="3" y="6" width="3" height="6" fill="#000"/>
-        </pattern>
-      </defs>
-      <rect x="246" y="0" width="8" height="50" fill="#fff"/>
-      <rect x="246" y="0" width="8" height="50" fill="url(#vlChecker)"/>
-      <!-- invisible lane paths (clockwise from finish line) -->
-      <path id="vlLane1" d="M 250,6  H 360 A 134,134 0 0 1 360,274 H 140 A 134,134 0 0 1 140,6  Z" fill="none"/>
-      <path id="vlLane2" d="M 250,18 H 360 A 122,122 0 0 1 360,262 H 140 A 122,122 0 0 1 140,18 Z" fill="none"/>
-      <path id="vlLane3" d="M 250,30 H 360 A 110,110 0 0 1 360,250 H 140 A 110,110 0 0 1 140,30 Z" fill="none"/>
-      <path id="vlLane4" d="M 250,42 H 360 A 98,98   0 0 1 360,238 H 140 A 98,98   0 0 1 140,42 Z" fill="none"/>
-      <!-- racers injected here -->
-      <g id="vlCarsGroup"></g>
-    </svg>
-    <div class="vl-winner-banner" id="vlWinnerBanner">🏆 YOU WIN! 🏆</div>
-  </div>
-  <button class="vl-skip" id="vlSkipBtn">Skip ▶</button>
 </div>
 
 <!-- ═══ RESULT ═══ -->
@@ -838,7 +798,7 @@ let garageReturnTo     = 'menu';
 
 // ─── DOM ─────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const screens = { menu: menuScreen, game: gameScreen, result: resultScreen, score: scoreScreen, garage: garageScreen, victoryLap: victoryLapScreen };
+const screens = { menu: menuScreen, game: gameScreen, result: resultScreen, score: scoreScreen, garage: garageScreen };
 
 function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -900,11 +860,18 @@ function buildMenu() {
     grid.querySelector(`[data-table="${n}"]`).classList.add('selected');
   });
 
-  document.querySelectorAll('.diff-btn').forEach(btn => {
+  document.querySelectorAll('.diff-btn:not(.mode-btn)').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.diff-btn:not(.mode-btn)').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       state.difficulty = btn.dataset.diff;
+    });
+  });
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
     });
   });
 
@@ -972,7 +939,8 @@ function setRoadSpeed(speed) {
 // ─── GAME START ───────────────────────────────────────────────────────────────
 function startGame() {
   state.name       = $('playerName').value.trim();
-  state.difficulty = document.querySelector('.diff-btn.selected').dataset.diff;
+  state.difficulty = document.querySelector('.diff-btn.selected:not(.mode-btn)').dataset.diff;
+  state.mode       = document.querySelector('.mode-btn.selected').dataset.mode;
   state.timeLeft   = DIFFICULTY[state.difficulty];
   state.score = state.correct = state.wrong = state.streak = state.bestStreak = 0;
   state.progress   = 0;
@@ -1013,17 +981,34 @@ function newQuestion() {
   const tables = [...state.tables];
   const a      = tables[Math.floor(Math.random() * tables.length)];
   const b      = Math.floor(Math.random() * 12) + 1;
-  const answer = a * b;
+  const product = a * b;
+
+  const useDivision = state.mode === 'divide' || (state.mode === 'both' && Math.random() < 0.5);
+
+  let questionText, answer;
+  if (useDivision) {
+    questionText = `${product} ÷ ${a} = ?`;
+    answer = b;
+  } else {
+    questionText = `${a} × ${b} = ?`;
+    answer = product;
+  }
+
   const wrongs = new Set();
   while (wrongs.size < 3) {
     let w;
     const r = Math.random();
-    if      (r < 0.4) w = answer + (Math.floor(Math.random() * 4) + 1) * (Math.random() < 0.5 ? 1 : -1);
-    else if (r < 0.7) w = a * (Math.floor(Math.random() * 12) + 1);
-    else               w = (Math.floor(Math.random() * 12) + 1) * (Math.floor(Math.random() * 12) + 1);
+    if (useDivision) {
+      if (r < 0.5) w = answer + (Math.floor(Math.random() * 4) + 1) * (Math.random() < 0.5 ? 1 : -1);
+      else          w = Math.floor(Math.random() * 12) + 1;
+    } else {
+      if      (r < 0.4) w = answer + (Math.floor(Math.random() * 4) + 1) * (Math.random() < 0.5 ? 1 : -1);
+      else if (r < 0.7) w = a * (Math.floor(Math.random() * 12) + 1);
+      else               w = (Math.floor(Math.random() * 12) + 1) * (Math.floor(Math.random() * 12) + 1);
+    }
     if (w !== answer && w > 0 && !wrongs.has(w)) wrongs.add(w);
   }
-  return { a, b, answer, options: [...wrongs, answer].sort(() => Math.random() - 0.5) };
+  return { questionText, answer, options: [...wrongs, answer].sort(() => Math.random() - 0.5) };
 }
 
 function nextQuestion() {
@@ -1032,7 +1017,7 @@ function nextQuestion() {
   state.currentAnswer = q.answer;
   state.answered      = false;
   state.questionCount++;
-  $('questionText').textContent = `${q.a} × ${q.b} = ?`;
+  $('questionText').textContent = q.questionText;
   const grid = $('answersGrid');
   grid.innerHTML = '';
   q.options.forEach(opt => {
@@ -1068,14 +1053,7 @@ function handleAnswer(chosen, btn) {
     spawnSpeedLines();
     boostCar();
     $('progressFill').style.width = state.progress + '%';
-    if (state.progress >= 100) {
-      setTimeout(() => {
-        clearInterval(state.timerInterval);
-        state.timerInterval = null;
-        showVictoryLap(endGame);
-      }, 600);
-      return;
-    }
+    if (state.progress >= 100) { showVictoryLap(); return; }
   } else {
     state.wrong++;
     state.streak = 0;
@@ -1131,83 +1109,56 @@ function boostCar() {
 }
 
 // ─── VICTORY LAP ─────────────────────────────────────────────────────────────
-// Plays after race completion: player's just-earned car races the rest of their
-// garage around a top-down oval and wins by a clear margin, then hands off to
-// the result screen.
-const SVG_NS   = 'http://www.w3.org/2000/svg';
-const XLINK_NS = 'http://www.w3.org/1999/xlink';
+function spawnConfetti(container) {
+  const colors = ['#ff6b35','#ffd700','#4caf50','#2196f3','#e91e63','#9c27b0','#ffffff'];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const size = 6 + Math.random() * 10;
+    p.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:-12px;
+      width:${size}px;
+      height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>0.5?'50%':'3px'};
+      animation-duration:${1.6+Math.random()*2}s;
+      animation-delay:${Math.random()*0.6}s;
+    `;
+    container.appendChild(p);
+  }
+}
 
-function showVictoryLap(onComplete) {
-  const playerCarIdx = carIndexForTables(state.tables);
-  // Garage hasn't been updated yet — endGame will mark this car NEW. Opponents
-  // are picked from cars unlocked before this race.
-  const previouslyUnlocked = loadGarage();
-  const opponents = [...previouslyUnlocked]
-    .filter(i => i !== playerCarIdx)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
+function showVictoryLap() {
+  clearInterval(state.timerInterval);
+  disableAnswers();
 
-  $('vlSubtitle').textContent = opponents.length === 0
-    ? 'A solo lap in your new ride!'
-    : 'Race the rest of your collection!';
+  const overlay = document.getElementById('victoryOverlay');
+  const carEl   = document.getElementById('victoryCar');
+  const carIdx  = carIndexForTables(state.tables);
+  carEl.textContent = CARS[carIdx].emoji;
+  overlay.style.display = 'flex';
 
-  const banner = $('vlWinnerBanner');
-  banner.classList.remove('show');
-  banner.textContent = `🏆 ${state.name || 'YOU'} WINS! 🏆`;
+  spawnConfetti(overlay);
 
-  // Lanes 1 (outermost) → 4 (innermost). Player in lane 2 — clearly visible,
-  // shortest duration → wins.
-  const racers = [
-    { lane: '#vlLane2', emoji: CARS[playerCarIdx].emoji, dur: 4.0, isPlayer: true },
-  ];
-  const oppLanes = ['#vlLane1', '#vlLane3', '#vlLane4'];
-  const oppDurs  = [4.6, 5.0, 5.4];
-  opponents.forEach((carIdx, i) => {
-    racers.push({ lane: oppLanes[i], emoji: CARS[carIdx].emoji, dur: oppDurs[i], isPlayer: false });
-  });
+  // Pass 1: left → right
+  carEl.style.animation = 'none';
+  void carEl.offsetWidth;
+  carEl.style.animation = 'vZoomRight 1s ease-in-out forwards';
 
-  const group = $('vlCarsGroup');
-  group.innerHTML = '';
-  racers.forEach(r => {
-    const g = document.createElementNS(SVG_NS, 'g');
+  // Pass 2: right → left
+  setTimeout(() => {
+    carEl.style.animation = 'none';
+    void carEl.offsetWidth;
+    carEl.style.animation = 'vZoomLeft 1s ease-in-out forwards';
+  }, 1200);
 
-    const text = document.createElementNS(SVG_NS, 'text');
-    text.setAttribute('font-size', r.isPlayer ? '26' : '22');
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('dominant-baseline', 'central');
-    // Emojis natively face left; flip so they face direction of travel.
-    text.setAttribute('transform', 'scale(-1, 1)');
-    if (r.isPlayer) text.setAttribute('filter', 'drop-shadow(0 0 5px gold)');
-    text.textContent = r.emoji;
-
-    const motion = document.createElementNS(SVG_NS, 'animateMotion');
-    motion.setAttribute('dur', r.dur + 's');
-    motion.setAttribute('repeatCount', '1');
-    motion.setAttribute('rotate', 'auto');
-    motion.setAttribute('fill', 'freeze');
-
-    const mpath = document.createElementNS(SVG_NS, 'mpath');
-    mpath.setAttributeNS(XLINK_NS, 'xlink:href', r.lane);
-    mpath.setAttribute('href', r.lane);
-
-    motion.appendChild(mpath);
-    g.appendChild(motion);
-    g.appendChild(text);
-    group.appendChild(g);
-  });
-
-  showScreen('victoryLap');
-
-  // Pop winner banner just after player crosses the line.
-  const winnerTimeout = setTimeout(() => banner.classList.add('show'), 4100);
-  // Hand off to the result screen a beat later.
-  const finishTimeout = setTimeout(() => onComplete(), 5800);
-
-  $('vlSkipBtn').onclick = () => {
-    clearTimeout(winnerTimeout);
-    clearTimeout(finishTimeout);
-    onComplete();
-  };
+  // Show results
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.querySelectorAll('.confetti-piece').forEach(p => p.remove());
+    endGame();
+  }, 2500);
 }
 
 // ─── END GAME ────────────────────────────────────────────────────────────────
@@ -1332,5 +1283,13 @@ document.addEventListener('keydown', e => {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 buildMenu();
 </script>
+
+<div id="victoryOverlay">
+  <div class="victory-title">🏁 VICTORY LAP! 🏁</div>
+  <div class="victory-track">
+    <div class="victory-car" id="victoryCar">🏎️</div>
+  </div>
+  <div class="victory-subtitle" id="victorySubtitle">Race Complete!</div>
+</div>
 </body>
 </html>
