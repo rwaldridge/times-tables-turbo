@@ -576,6 +576,8 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    cursor: pointer;
+    user-select: none;
   }
   .victory-title {
     font-size: clamp(2rem, 8vw, 3.5rem);
@@ -586,38 +588,67 @@
     animation: victoryPulse 0.35s ease-in-out infinite alternate;
     text-align: center;
     z-index: 10;
-  }
-  .victory-subtitle {
-    font-size: 1.3rem;
-    color: #fff;
-    margin-top: 10px;
-    opacity: 0.85;
-    z-index: 10;
+    pointer-events: none;
   }
   @keyframes victoryPulse { to { transform: scale(1.06) rotate(-1deg); } }
   .victory-track {
     width: 100%;
-    height: 90px;
+    height: 150px;
     position: relative;
-    overflow: hidden;
-    margin: 24px 0;
-    background: rgba(255,255,255,0.05);
-    border-top: 3px dashed rgba(255,255,255,0.2);
-    border-bottom: 3px dashed rgba(255,255,255,0.2);
+    margin: 20px 0 10px;
+  }
+  .victory-road {
+    position: absolute;
+    bottom: 0;
+    left: -5%; right: -5%;
+    height: 44px;
+    background: #555;
+    border-top: 5px solid #fff;
+  }
+  .victory-car-wrapper {
+    position: absolute;
+    bottom: 36px;
+    animation: vCarLoop 2.2s linear infinite;
   }
   .victory-car {
-    position: absolute;
     font-size: 3.5rem;
-    top: 50%;
+    display: block;
+    transform: scaleX(-1);
   }
-  @keyframes vZoomRight {
-    from { left: -15%; transform: translateY(-50%); }
-    to   { left: 115%; transform: translateY(-50%); }
+  .victory-car.jumping {
+    animation: vJump 0.65s ease-out forwards;
   }
-  @keyframes vZoomLeft {
-    from { left: 115%; transform: translateY(-50%) scaleX(-1); }
-    to   { left: -15%; transform: translateY(-50%) scaleX(-1); }
+  @keyframes vCarLoop {
+    from { left: -15%; }
+    to   { left: 110%; }
   }
+  @keyframes vJump {
+    0%   { transform: scaleX(-1) translateY(0); }
+    35%  { transform: scaleX(-1) translateY(-65px); }
+    65%  { transform: scaleX(-1) translateY(-65px); }
+    100% { transform: scaleX(-1) translateY(0); }
+  }
+  .victory-hint {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 14px;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  .victory-continue-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #c0392b;
+    transition: transform 0.1s, box-shadow 0.1s;
+    z-index: 10;
+  }
+  .victory-continue-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #c0392b; }
   .confetti-piece {
     position: absolute;
     animation: confettiFall linear forwards;
@@ -1133,32 +1164,64 @@ function showVictoryLap() {
   clearInterval(state.timerInterval);
   disableAnswers();
 
-  const overlay = document.getElementById('victoryOverlay');
-  const carEl   = document.getElementById('victoryCar');
-  const carIdx  = carIndexForTables(state.tables);
+  const overlay  = document.getElementById('victoryOverlay');
+  const carEl    = document.getElementById('victoryCar');
+  const wrapper  = document.getElementById('victoryCarWrapper');
+  const hint     = document.getElementById('victoryHint');
+  const carIdx   = carIndexForTables(state.tables);
   carEl.textContent = CARS[carIdx].emoji;
-  overlay.style.display = 'flex';
 
+  // Restart the loop animation fresh
+  wrapper.style.animation = 'none';
+  void wrapper.offsetWidth;
+  wrapper.style.animation = 'vCarLoop 2.2s linear infinite';
+
+  hint.style.opacity = '1';
+  overlay.style.display = 'flex';
   spawnConfetti(overlay);
 
-  // Pass 1: left → right
-  carEl.style.animation = 'none';
-  void carEl.offsetWidth;
-  carEl.style.animation = 'vZoomRight 1s ease-in-out forwards';
+  let isJumping = false;
+  let dismissed = false;
+  const jumpMsgs = ['WHEEE! 🎉', 'ZOOM! 🚀', 'WOOP! 🏁', 'YAY! ⭐', 'BOING! 🌟'];
 
-  // Pass 2: right → left
-  setTimeout(() => {
-    carEl.style.animation = 'none';
+  function doJump(e) {
+    if (e && e.target && e.target.closest && e.target.closest('#victoryContinueBtn')) return;
+    if (isJumping || dismissed) return;
+    isJumping = true;
+    hint.style.opacity = '0';
+    carEl.classList.remove('jumping');
     void carEl.offsetWidth;
-    carEl.style.animation = 'vZoomLeft 1s ease-in-out forwards';
-  }, 1200);
+    carEl.classList.add('jumping');
+    const text = document.createElement('div');
+    text.className = 'float-score pos';
+    text.textContent = jumpMsgs[Math.floor(Math.random() * jumpMsgs.length)];
+    text.style.cssText = 'left:50vw;top:35vh;transform:translateX(-50%);font-size:1.6rem;';
+    overlay.appendChild(text);
+    setTimeout(() => text.remove(), 950);
+    setTimeout(() => { carEl.classList.remove('jumping'); isJumping = false; }, 700);
+  }
 
-  // Show results
-  setTimeout(() => {
+  function jumpKey(e) {
+    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); doJump(); }
+  }
+
+  function dismissVictory() {
+    if (dismissed) return;
+    dismissed = true;
+    clearTimeout(autoTimer);
+    overlay.removeEventListener('click', doJump);
+    document.removeEventListener('keydown', jumpKey);
     overlay.style.display = 'none';
     overlay.querySelectorAll('.confetti-piece').forEach(p => p.remove());
     endGame();
-  }, 2500);
+  }
+
+  overlay.addEventListener('click', doJump);
+  document.addEventListener('keydown', jumpKey);
+  document.getElementById('victoryContinueBtn').onclick = dismissVictory;
+
+  // Auto-advance after 15 s if Felix doesn't tap Continue
+  const autoTimer = setTimeout(dismissVictory, 15000);
 }
 
 // ─── END GAME ────────────────────────────────────────────────────────────────
@@ -1287,9 +1350,13 @@ buildMenu();
 <div id="victoryOverlay">
   <div class="victory-title">🏁 VICTORY LAP! 🏁</div>
   <div class="victory-track">
-    <div class="victory-car" id="victoryCar">🏎️</div>
+    <div class="victory-road"></div>
+    <div class="victory-car-wrapper" id="victoryCarWrapper">
+      <div class="victory-car" id="victoryCar">🏎️</div>
+    </div>
   </div>
-  <div class="victory-subtitle" id="victorySubtitle">Race Complete!</div>
+  <div class="victory-hint" id="victoryHint">👆 Tap / press Space to make your car jump!</div>
+  <button class="victory-continue-btn" id="victoryContinueBtn">🏁 Continue to Results</button>
 </div>
 </body>
 </html>
