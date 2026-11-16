@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Times Tables Turbo - Test Trainer</title>
+<style>
+  :root {
+    --accent: #ff6b35;
+    --accent-dark: #c0392b;
+    --gold: #ffd700;
+    --correct: #4caf50;
+    --wrong: #f44336;
+    --night: #16213e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  button { font-family: inherit; }
+
+  .screen { display: none; width: 100vw; height: 100vh; height: 100dvh; }
+  .screen.active { display: flex; }
+
+  /* ── MENU ── */
+  #menuScreen {
+    flex-direction: column; align-items: center;
+    background: linear-gradient(180deg, #87ceeb 0%, #c8e6c9 70%, #3a7d44 70%);
+    overflow-y: auto; padding: 16px 12px 24px;
+  }
+  .menu-car { font-size: 3.2rem; animation: bounce 0.6s ease-in-out infinite alternate; }
+  .menu-car span { display: inline-block; transform: scaleX(-1); }
+  @keyframes bounce { to { transform: translateY(-8px); } }
+  .menu-title { text-align: center; margin-bottom: 12px; }
+  .menu-title h1 {
+    font-size: clamp(1.6rem, 6vw, 2.8rem); color: #fff; line-height: 1.1; letter-spacing: 2px;
+    text-shadow: 3px 3px 0 #e65100, -1px -1px 0 #e65100;
+  }
+  .menu-title p { font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin-top: 4px; }
+  .menu-card {
+    background: rgba(255,255,255,0.95); color: #333; border-radius: 20px;
+    padding: 18px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    max-width: 520px; width: 100%;
+  }
+  .menu-card label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.95rem; }
+  .name-input {
+    width: 100%; padding: 10px 14px; border: 3px solid #ddd; border-radius: 12px;
+    font-size: 1rem; margin-bottom: 14px;
+  }
+  .name-input:focus { outline: none; border-color: var(--accent); }
+
+  .test-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+  .test-btn {
+    padding: 7px 2px 5px; border: 3px solid #ddd; border-radius: 10px; background: #fff;
+    font-size: 1rem; font-weight: 800; cursor: pointer; color: #333; line-height: 1.15;
+  }
+  .test-btn small { display: block; font-size: 0.62rem; font-weight: 600; color: #888; min-height: 0.8rem; }
+  .test-btn .tcar { display: block; font-size: 1rem; }
+  .test-btn .tcar.locked { filter: grayscale(1); opacity: 0.3; }
+  .test-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .test-btn.selected small { color: #ffe9df; }
+  .test-info { font-size: 0.85rem; color: #555; margin-bottom: 14px; min-height: 1.1rem; text-align: center; }
+
+  .opt-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .opt-btn {
+    flex: 1; padding: 8px 4px; border: 3px solid #ddd; border-radius: 10px; background: #fff;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; color: #333;
+  }
+  .opt-btn.selected { background: #5c6bc0; color: #fff; border-color: transparent; }
+
+  .start-btn, .btn-primary {
+    padding: 14px 24px; background: var(--accent); color: #fff; border: none; border-radius: 14px;
+    font-size: 1.15rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--accent-dark);
+    letter-spacing: 0.5px;
+  }
+  .start-btn { width: 100%; }
+  .start-btn:active, .btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
+  .start-btn:disabled { background: #ccc; box-shadow: 0 4px 0 #aaa; cursor: not-allowed; }
+  .btn-secondary {
+    padding: 12px 20px; background: rgba(255,255,255,0.15); color: #fff;
+    border: 2px solid rgba(255,255,255,0.3); border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
+  }
+  .menu-links { display: flex; gap: 18px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .menu-link { font-size: 0.9rem; color: #555; cursor: pointer; text-decoration: underline; }
+
+  /* ── QUIZ ── */
+  #quizScreen { flex-direction: column; background: linear-gradient(180deg, #87ceeb 0%, #b8dff5 100%); }
+  .hud {
+    display: flex; justify-content: space-around; align-items: center; padding: 6px 10px;
+    background: rgba(0,0,0,0.78); gap: 6px;
+  }
+  .hud-item { text-align: center; }
+  .hud-label { font-size: 0.58rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+  .hud-value { font-size: 1.15rem; font-weight: 800; }
+  .hud-value.gold { color: var(--gold); }
+  .hud-value.green { color: #7ef07e; }
+  .hud-value.orange { color: #ff9f43; }
+  .quit-btn { background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; }
+
+  .strip { position: relative; height: 74px; background: #3a7d44; border-bottom: 4px solid #2d6636; flex-shrink: 0; }
+  .strip-road { position: absolute; left: 0; right: 0; height: 26px; background: #555; border-top: 2px dashed rgba(255,255,255,0.5); }
+  .strip-road.r1 { top: 8px; } .strip-road.r2 { top: 40px; }
+  .strip-flag { position: absolute; right: 4px; top: 22px; font-size: 1.5rem; }
+  .strip-car { position: absolute; font-size: 1.5rem; transition: left 0.4s ease; white-space: nowrap; }
+  .strip-car span { display: inline-block; transform: scaleX(-1); }
+  .strip-car small { font-size: 0.55rem; font-weight: 800; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 6px; vertical-align: middle; }
+  #stripGhost { top: 4px; opacity: 0.75; transition: left 0.25s linear; }
+  #stripPlayer { top: 36px; }
+
+  .quiz-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 12px; min-height: 0; gap: 8px; }
+  .q-count { font-size: 0.85rem; font-weight: 800; color: #1a1a2e; background: rgba(255,255,255,0.7); padding: 3px 12px; border-radius: 20px; }
+  .question-text {
+    font-size: clamp(2.2rem, 9vw, 4rem); font-weight: 900; letter-spacing: 1px; text-align: center;
+    text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000;
+  }
+  .answer-display {
+    min-width: 170px; height: 62px; background: #fff; color: #222; border-radius: 14px; border: 4px solid #1a1a2e;
+    font-size: 2.2rem; font-weight: 900; display: flex; align-items: center; justify-content: center; padding: 0 14px;
+  }
+  .answer-display.correct { background: var(--correct); color: #fff; border-color: #2e7d32; animation: pop 0.3s; }
+  .answer-display.wrong { background: var(--wrong); color: #fff; border-color: #b71c1c; animation: shake 0.3s; }
+  .feedback { height: 1.6rem; font-size: 1.15rem; font-weight: 900; color: #b71c1c; text-shadow: 0 0 6px #fff, 0 0 6px #fff; }
+  .feedback.good { color: #1b5e20; }
+  @keyframes pop { 50% { transform: scale(1.12); } }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: min(100%, 340px); }
+  .key {
+    padding: 0; height: clamp(44px, 8.2vh, 62px); border: none; border-radius: 12px; background: rgba(255,255,255,0.96); color: #222;
+    font-size: 1.5rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .key:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  .key.go { background: var(--correct); color: #fff; grid-column: span 3; font-size: 1.3rem; }
+  .key.del { background: #ffcdd2; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(100%, 420px); }
+  .choice {
+    padding: 18px 8px; border: none; border-radius: 14px; background: rgba(255,255,255,0.96); color: #222;
+    font-size: 1.7rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .choice.correct { background: var(--correct); color: #fff; }
+  .choice.wrong { background: var(--wrong); color: #fff; }
+
+  /* ── PIT STOP (between test and race) ── */
+  #pitScreen, #resultScreen, #garageScreen {
+    flex-direction: column; align-items: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 22px 16px 28px; overflow-y: auto; gap: 14px;
+  }
+  #pitScreen { justify-content: center; text-align: center; }
+  .big-emoji { font-size: 4rem; animation: bounce 0.5s ease-in-out infinite alternate; }
+  .title { font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 900; color: var(--gold); text-shadow: 2px 2px 0 #8B6914; text-align: center; }
+  .pit-score { font-size: 3.2rem; font-weight: 900; }
+  .pit-boosts { font-size: 2rem; letter-spacing: 4px; min-height: 2.6rem; }
+  .pit-text { max-width: 420px; opacity: 0.9; line-height: 1.4; }
+
+  /* ── RACE ── */
+  #raceScreen { flex-direction: column; align-items: center; background: #0d1117; }
+  .race-wrap { position: relative; width: 100%; max-width: calc((100dvh - 150px) * 16 / 9); }
+  #raceCanvas { width: 100%; aspect-ratio: 16 / 9; display: block; background: #87ceeb; touch-action: none; }
+  .race-controls { flex: 1; width: 100%; max-width: 620px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; padding: 10px; min-height: 120px; max-height: 300px; }
+  .steer { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+  .ctrl {
+    border: none; border-radius: 16px; font-size: 1.8rem; font-weight: 900; color: #fff; cursor: pointer;
+    background: #3949ab; box-shadow: 0 5px 0 #1a237e; user-select: none; -webkit-user-select: none; touch-action: none;
+  }
+  .ctrl:active { transform: translateY(3px); box-shadow: 0 2px 0 #1a237e; }
+  .ctrl.turbo { background: linear-gradient(135deg, #ff6b35, #ffd700); box-shadow: 0 5px 0 #b34700; font-size: 1.3rem; line-height: 1.3; }
+  .ctrl.turbo:disabled { background: #555; box-shadow: 0 5px 0 #333; color: #999; }
+  .race-hint { font-size: 0.75rem; opacity: 0.6; padding-bottom: 6px; text-align: center; }
+
+  /* ── RESULT ── */
+  .result-stats {
+    background: rgba(255,255,255,0.1); border-radius: 20px; padding: 14px 20px; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 10px 18px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.15); max-width: 440px; width: 100%;
+  }
+  .stat-num { font-size: 1.7rem; font-weight: 900; color: var(--gold); }
+  .stat-lbl { font-size: 0.65rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .badge { background: linear-gradient(135deg, var(--gold), #ff9f43); color: #333; font-weight: 900; padding: 5px 14px; border-radius: 30px; font-size: 0.9rem; animation: pop 0.4s; }
+  .car-award {
+    background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,107,53,0.15)); border: 2px solid rgba(255,215,0,0.4);
+    border-radius: 20px; padding: 14px 26px; text-align: center; max-width: 440px; width: 100%;
+  }
+  .car-award-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); font-weight: 700; }
+  .car-award-emoji { font-size: 3.8rem; display: inline-block; transform: scaleX(-1); filter: drop-shadow(0 0 16px rgba(255,215,0,0.8)); }
+  .car-award-name { font-size: 1.2rem; font-weight: 900; color: var(--gold); }
+  .car-award-desc { font-size: 0.85rem; opacity: 0.85; }
+  .mistakes { max-width: 440px; width: 100%; background: rgba(255,255,255,0.08); border-radius: 16px; padding: 12px 16px; }
+  .mistakes h3 { font-size: 0.95rem; margin-bottom: 8px; color: #ffab91; }
+  .mistake-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .mistake { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; font-weight: 800; font-size: 0.95rem; }
+  .mistake small { display: block; font-weight: 600; opacity: 0.65; font-size: 0.7rem; }
+  .result-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* ── GARAGE ── */
+  .garage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; width: min(100%, 620px); }
+  .garage-car {
+    background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px;
+    padding: 12px 6px 8px; text-align: center; position: relative;
+  }
+  .garage-car.unlocked { background: rgba(255,215,0,0.08); border-color: rgba(255,215,0,0.35); cursor: pointer; }
+  .garage-car.chosen { border-color: var(--gold); box-shadow: 0 0 14px rgba(255,215,0,0.6); }
+  .garage-car-emoji { font-size: 2.4rem; display: inline-block; transform: scaleX(-1); }
+  .garage-car.locked .garage-car-emoji { filter: grayscale(1) opacity(0.3); }
+  .garage-car-name { font-size: 0.72rem; font-weight: 700; line-height: 1.2; }
+  .garage-car-test { font-size: 0.65rem; opacity: 0.6; margin-top: 2px; }
+  .garage-note { font-size: 0.85rem; opacity: 0.7; text-align: center; }
+
+  .confetti-piece { position: fixed; top: -12px; z-index: 500; pointer-events: none; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { to { transform: translateY(105vh) rotate(900deg); opacity: 0.2; } }
+</style>
+</head>
+<body>
+
+<!-- ═══ MENU ═══ -->
+<div id="menuScreen" class="screen active">
+  <div class="menu-car"><span id="menuCar">🛹</span></div>
+  <div class="menu-title">
+    <h1>Times Tables TURBO<br>Test Trainer</h1>
+    <p>Do the real test, then race the Grand Prix! 🏁</p>
+  </div>
+  <div class="menu-card">
+    <label for="playerName">Your name, driver</label>
+    <input type="text" id="playerName" class="name-input" placeholder="e.g. Felix Speedster" maxlength="16" autocomplete="off">
+
+    <label>Which test?</label>
+    <div class="test-grid" id="testGrid"></div>
+    <div class="test-info" id="testInfo"></div>
+
+    <label>How do you answer?</label>
+    <div class="opt-row">
+      <button class="opt-btn" data-input="type">⌨️ Type it<br><small>like the real test</small></button>
+      <button class="opt-btn" data-input="choice">🔘 Pick it<br><small>4 choices</small></button>
+    </div>
+
+    <button class="start-btn" id="startBtn">🏁 Start Test!</button>
+    <div class="menu-links">
+      <span class="menu-link" id="garageLink">🚗 My Garage</span>
+      <span class="menu-link" id="soundLink">🔊 Sound on</span>
+      <a class="menu-link" href="../">🏎️ Original game</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUIZ ═══ -->
+<div id="quizScreen" class="screen">
+  <div class="hud">
+    <div class="hud-item"><div class="hud-label">Test</div><div class="hud-value" id="hudTest">1a</div></div>
+    <div class="hud-item"><div class="hud-label">Time</div><div class="hud-value gold" id="hudTime">0:00</div></div>
+    <div class="hud-item"><div class="hud-label">Correct</div><div class="hud-value green" id="hudCorrect">0</div></div>
+    <div class="hud-item"><div class="hud-label">Streak 🔥</div><div class="hud-value orange" id="hudStreak">0</div></div>
+    <button class="quit-btn" id="quitBtn">✕ Quit</button>
+  </div>
+  <div class="strip">
+    <div class="strip-road r1"></div><div class="strip-road r2"></div>
+    <div class="strip-flag">🏁</div>
+    <div class="strip-car" id="stripGhost"><span>👻</span> <small id="ghostLabel">Pace car</small></div>
+    <div class="strip-car" id="stripPlayer"><span id="stripPlayerCar">🛹</span> <small>You</small></div>
+  </div>
+  <div class="quiz-main">
+    <div class="q-count" id="qCount">Question 1 of 30</div>
+    <div class="question-text" id="questionText">6 ÷ 2</div>
+    <div class="answer-display" id="answerDisplay"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="keypad" id="keypad"></div>
+    <div class="choices" id="choices" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══ PIT STOP ═══ -->
+<div id="pitScreen" class="screen">
+  <div class="big-emoji">🔧</div>
+  <div class="title">Test finished!</div>
+  <div class="pit-score" id="pitScore">0 / 30</div>
+  <div class="pit-boosts" id="pitBoosts"></div>
+  <div class="pit-text" id="pitText"></div>
+  <button class="btn-primary" id="toRaceBtn">🚦 To the Grand Prix!</button>
+</div>
+
+<!-- ═══ RACE ═══ -->
+<div id="raceScreen" class="screen">
+  <div class="race-wrap"><canvas id="raceCanvas"></canvas></div>
+  <div class="race-controls">
+    <div class="steer">
+      <button class="ctrl" id="upBtn">▲</button>
+      <button class="ctrl" id="downBtn">▼</button>
+    </div>
+    <button class="ctrl turbo" id="turboBtn">🚀 TURBO<br><span id="turboCount">x0</span></button>
+  </div>
+  <div class="race-hint">Arrow keys ↑ ↓ to steer · Space for turbo · Dodge 🚧 · Grab ⭐ and ⚡</div>
+</div>
+
+<!-- ═══ RESULT ═══ -->
+<div id="resultScreen" class="screen">
+  <div class="big-emoji" id="resTrophy">🏆</div>
+  <div class="title" id="resTitle">Race Complete!</div>
+  <div class="badges" id="resBadges"></div>
+  <div class="car-award" id="carAward" style="display:none">
+    <div class="car-award-label" id="carAwardLabel">🏆 Car Unlocked!</div>
+    <span class="car-award-emoji" id="carAwardEmoji">🚗</span>
+    <div class="car-award-name" id="carAwardName"></div>
+    <div class="car-award-desc" id="carAwardDesc"></div>
+  </div>
+  <div class="result-stats">
+    <div><div class="stat-num" id="resScore">0/30</div><div class="stat-lbl">Test score</div></div>
+    <div><div class="stat-num" id="resTime">0:00</div><div class="stat-lbl">Test time</div></div>
+    <div><div class="stat-num" id="resStreak">0</div><div class="stat-lbl">Best streak</div></div>
+    <div><div class="stat-num" id="resPos">1st</div><div class="stat-lbl">Grand Prix</div></div>
+    <div><div class="stat-num" id="resStars">0</div><div class="stat-lbl">Stars ⭐</div></div>
+    <div><div class="stat-num" id="resTotalStars">0</div><div class="stat-lbl">Total stars</div></div>
+  </div>
+  <div class="mistakes" id="mistakes" style="display:none">
+    <h3>🔧 Practise these ones</h3>
+    <div class="mistake-list" id="mistakeList"></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-primary" id="againBtn">🔄 Same test again</button>
+    <button class="btn-secondary" id="nextBtn">➡️ Next test</button>
+    <button class="btn-secondary" id="resGarageBtn">🚗 Garage</button>
+    <button class="btn-secondary" id="resMenuBtn">🏠 Menu</button>
+  </div>
+</div>
+
+<!-- ═══ GARAGE ═══ -->
+<div id="garageScreen" class="screen">
+  <div class="title">🚗 My Garage</div>
+  <div class="garage-note" id="garageNote"></div>
+  <div class="garage-grid" id="garageGrid"></div>
+  <button class="btn-primary" id="garageBackBtn">← Back</button>
+</div>
+
+<script>
+// ─── THE TESTS ───────────────────────────────────────────────────────────────
+// Transcribed from the school answer sheets, in the exact printed order.
+// "x" = multiply, "/" = divide. 30 questions per test.
+const TESTS = [
+  { id: '1',   q: '2x2,5x2,1x2,3x2,4x10,5x10,2x10,1x10,6x2,7x2,3x2,4x2,4x10,6x10,5x10,7x2,3x2,0x2,0x10,3x10,7x10,1x10,8x10,10x2,10x10,11x2,12x2,10x10,11x2,12x10' },
+  { id: '1a',  q: '6/2,10/2,16/2,20/10,100/10,10/10,16/2,4/2,8/2,40/10,14/2,2/2,12/2,70/10,30/10,50/10,8/2,60/10,100/10,16/2,8/2,18/2,20/2,100/0,14/2,90/10,3x2x10,5x2x10,10x10x2,10x4x0' },
+  { id: '2',   q: '2x5,5x5,1x5,3x5,4x5,5x10,2x2,1x5,6x5,7x2,3x5,4x2,4x5,6x5,5x5,7x2,3x10,0x5,5x0,3x5,7x10,1x5,8x5,10x5,10x10,11x2,12x5,11x5,11x2,12x5' },
+  { id: '2a',  q: '30/5,10/5,35/5,20/5,100/10,10/5,40/5,25/5,8/2,40/10,20/5,35/5,10/5,70/10,30/5,50/5,8/2,60/10,100/10,55/5,15/5,45/5,20/2,100/1,14/2,45/5,10x2x2,3x10x1,5x5x2,10x10x2' },
+  { id: '3',   q: '2x3,4x3,1x3,6x3,2x3,5x2,2x3,1x3,9x3,8x3,3x3,4x3,4x10,5x5,3x10,4x3,7x3,9x3,7x3,3x3,0x3,11x3,10x5,7x2,7x3,12x3,3x10,5x8,9x2,12x3' },
+  { id: '3a',  q: '10/5,10/2,50/10,18/3,27/3,20/4,9/3,12/4,12/3,12/2,12/6,21/3,15/3,24/3,30/3,50/10,25/5,12/3,6/3,24/3,21/3,36/3,30/3,27/3,15/3,33/3,3x3x1,2x2x5,2x4x5,4x3x0' },
+  { id: '4',   q: '2x3,5x3,1x3,6x3,6x6,5x6,10x3,1x6,6x2,5x3,4x3,6x4,0x3,3x5,7x6,4x6,6x0,5x6,10x6,12x3,11x6,8x6,12x6,9x6,12x0,8x6,7x5,12x3,11x6,1x6' },
+  { id: '4a',  q: '12/6,12/2,24/6,18/6,27/3,20/5,48/6,36/6,12/6,72/6,18/3,42/6,54/6,72/6,36/6,54/6,25/5,48/6,6/6,0/6,48/6,66/6,36/6,24/6,60/6,48/6,6x2x10,3x2x5,2x1x6,2x3x5' },
+  { id: '5',   q: '2x4,1x6,6x4,3x4,2x5,10x4,3x6,3x5,0x6,11x4,3x4,2x10,5x6,4x4,2x4,4x5,5x4,6x2,10x3,10x4,8x4,11x4,10x5,4x6,7x2,8x6,10x4,12x4,9x4,8x4' },
+  { id: '5a',  q: '12/4,20/4,24/4,18/6,44/4,20/4,8/4,35/5,12/6,16/4,36/4,44/4,54/6,48/4,20/4,28/4,32/4,48/4,4/4,0/4,48/4,24/4,32/4,24/6,12/4,8/4,2x2x10,4x1x6,5x2x10,3x4x2' },
+  { id: '6',   q: '2x8,5x8,1x8,6x8,6x5,2x4,3x10,2x8,9x8,3x8,7x8,2x8,3x5,10x7,8x6,8x8,5x6,9x8,2x8,6x4,10x4,5x4,8x3,3x8,12x8,10x8,8x6,9x8,12x8,5x8' },
+  { id: '6a',  q: '16/8,32/8,24/8,80/8,16/8,20/4,8/8,48/8,24/8,88/8,32/8,40/8,16/8,48/8,96/8,32/8,40/8,48/8,56/8,0/8,64/8,72/8,88/8,56/8,56/8,8/1,6x2x10,4x2x6,2x4x8,2x4x9' },
+  { id: '7',   q: '2x7,5x7,1x5,1x7,6x7,7x6,4x7,5x8,10x8,6x7,9x7,4x7,0x7,12x5,10x7,8x7,4x7,12x4,5x5,3x6,12x5,3x4,6x7,8x7,9x7,8x5,9x2,2x5,12x7,11x7' },
+  { id: '7a',  q: '14/7,28/7,42/7,70/7,35/7,7/7,7/0,49/7,77/7,14/7,32/8,42/7,21/7,49/7,84/7,70/7,7/7,48/8,56/8,0/7,56/7,72/8,84/7,56/8,56/7,63/7,1x4x5,3x2x7,3x4x7,2x5x7' },
+  { id: '8',   q: '2x9,5x9,1x9,1x8,6x9,7x9,4x9,5x9,10x9,9x6,9x9,4x9,0x7,12x5,11x9,8x7,4x7,12x9,5x9,3x9,12x9,3x9,6x7,8x7,9x9,8x5,6x9,2x5,12x9,11x7' },
+  { id: '8a',  q: '18/9,36/9,45/9,90/9,9/9,90/9,54/9,27/9,99/9,18/9,36/9,63/9,72/9,45/9,108/9,90/9,9/9,63/9,81/9,99/9,72/9,36/9,108/9,54/9,81/9,63/9,3x4x9,4x2x9,2x2x9,2x5x9' },
+  { id: '9',   q: '63/9,48/6,56/8,49/7,32/4,28/7,110/10,144/12,132/11,99/9,80/8,72/6,36/9,21/3,18/9,2x3x4,5x5x3,10x2x6,4x4x5,6x5x9,7x8x2,9x7x0,8x8x2,5x4x4,3x9x2,9x9x1,7x4x5,3x3x2,12x3x2,11x6x4' },
+  { id: '10',  q: '2x11,5x11,1x11,6x11,9x11,12x11,11x4,11x8,8x7,5x6,12x7,12x5,9x9,7x11,8x7,6x9,9x5,12x0,11x1,12x9,3x11,9x5,8x5,7x9,11x4,11x8,11x11,11x12,3x11,12x11' },
+  { id: '10a', q: '88/11,33/11,44/11,99/11,11/11,66/11,55/11,77/11,99/11,11/11,33/11,110/11,77/11,44/11,121/11,132/11,110/11,66/11,88/11,99/11,77/11,22/11,110/11,66/11,22/11,33/11,3x4x11,4x2x11,3x3x11,2x5x11' },
+  { id: '11',  q: '2x12,5x12,1x12,6x12,9x12,12x12,1x12,10x12,7x12,4x12,7x12,8x12,9x8,12x10,6x12,7x9,10x12,12x11,6x12,3x12,8x9,8x12,4x12,12x4,11x12,10x9,9x12,7x12,8x9,7x7' },
+  { id: '11a', q: '84/12,36/12,48/12,96/12,120/12,60/12,36/12,24/12,96/12,48/12,72/12,120/12,84/12,48/12,132/12,132/12,144/12,60/12,84/12,132/12,24/12,12/12,144/12,60/12,36/12,48/12,3x4x12,4x3x11,3x3x12,2x6x12' },
+  { id: '12',  q: '0.2x3,3x0.5,1x0.1,0.4x5,0.7x4,0.9x3,0.3x8,0.5x6,5x0.8,2x0.7,0.3x6,0.8x3,0.7x6,9x0.4,0.5x3,0.7x2,10x0.5,0.9x10,0.5x10,0.2x0.2,0.5x0.5,0.6x0.2,0.3x0.3,0.3x3,0.4x0.4,0.4x4,0.03x10,0.09x10,0.05x10,0.7x10' },
+];
+
+const TEST_DESC = {
+  '1': '×2 and ×10', '1a': '÷2 and ÷10', '2': '×5 (with ×2, ×10)', '2a': '÷5 (with ÷2, ÷10)',
+  '3': '×3', '3a': '÷3', '4': '×6 and ×3', '4a': '÷6', '5': '×4', '5a': '÷4', '6': '×8', '6a': '÷8',
+  '7': '×7', '7a': '÷7', '8': '×9', '8a': '÷9', '9': 'mixed ÷ and three numbers',
+  '10': '×11', '10a': '÷11', '11': '×12', '11a': '÷12', '12': 'decimals',
+};
+
+// One car per test, in test order
+const CARS = [
+  { emoji: '🛴', name: 'Zippy Scooter',      desc: 'Every champion starts here.' },
+  { emoji: '🚲', name: 'Pedal Rocket',       desc: 'Leg power!' },
+  { emoji: '🛵', name: 'Buzzing Moped',      desc: 'Beep beep!' },
+  { emoji: '🛺', name: 'Wobbly Tuk-Tuk',     desc: 'Three wheels of fury.' },
+  { emoji: '🚗', name: 'Learner Hatchback',  desc: 'A proper car at last!' },
+  { emoji: '🚕', name: 'Yellow Speedster',   desc: 'Always in a hurry!' },
+  { emoji: '🚙', name: 'Trusty 4x4',         desc: 'Solid and dependable.' },
+  { emoji: '🚐', name: 'Turbo Van',          desc: 'More power than it looks!' },
+  { emoji: '🚌', name: 'Big Red Bus',        desc: 'Room for all your trophies.' },
+  { emoji: '🚓', name: 'Police Interceptor', desc: 'Lightning-fast response!' },
+  { emoji: '🚑', name: 'Turbo Medic',        desc: 'Fastest in the city!' },
+  { emoji: '🚒', name: 'Fire Fury',          desc: 'Blazing hot speed!' },
+  { emoji: '🛻', name: 'Thunder Pickup',     desc: 'Raw power, zero limits!' },
+  { emoji: '🚚', name: 'Mega Truck',         desc: 'Unstoppable.' },
+  { emoji: '🚜', name: 'Monster Tractor',    desc: 'Crushes every obstacle.' },
+  { emoji: '🏍️', name: 'Superbike',          desc: 'Two wheels, top speed.' },
+  { emoji: '🏎️', name: 'Formula Racer',      desc: 'Built for the track!' },
+  { emoji: '🚂', name: 'Steam Express',      desc: 'Full steam ahead!' },
+  { emoji: '🚁', name: 'Sky Chopper',        desc: 'Why drive when you can fly?' },
+  { emoji: '✈️', name: 'Jet Plane',          desc: 'Supersonic!' },
+  { emoji: '🚀', name: 'Space Rocket',       desc: 'It defies gravity!' },
+  { emoji: '🛸', name: 'Alien UFO Supreme',  desc: 'Out of this world! 👽' },
+];
+const STARTER_CAR = '🛹';
+const UNLOCK_SCORE = 30;      // school pass mark is 100%: all 30 right wins the test's car
+const PACE_SECONDS = 150;     // pace car time when there is no best time yet (5s a question)
+
+function parseQuestion(src) {
+  let answer, text;
+  if (src.includes('/')) {
+    const [a, b] = src.split('/').map(Number);
+    answer = b === 0 ? 0 : a / b;          // the school sheets mark "n ÷ 0" as 0
+    text = `${a} ÷ ${b}`;
+  } else {
+    const parts = src.split('x');
+    answer = parts.map(Number).reduce((p, n) => p * n, 1);
+    text = parts.join(' × ');
+  }
+  return { text, answer: Math.round(answer * 1000) / 1000 };
+}
+TESTS.forEach((t, i) => { t.questions = t.q.split(',').map(parseQuestion); t.car = CARS[i]; t.index = i; });
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+const SAVE_KEY = 'ttturbo_tests_v1';
+let save = { name: '', test: '1a', input: 'type', sound: true, car: null, stars: 0, results: {} };
+try { Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY)) || {}); } catch (e) {}
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+const unlocked = id => !!(save.results[id] && save.results[id].car);
+function playerCar() { return save.car || STARTER_CAR; }
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const screens = ['menu', 'quiz', 'pit', 'race', 'result', 'garage'];
+let currentScreen = 'menu';
+function showScreen(name) {
+  screens.forEach(s => $(s + 'Screen').classList.toggle('active', s === name));
+  currentScreen = name;
+}
+const fmtTime = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const ordinal = n => ['1st', '2nd', '3rd', '4th'][n - 1];
+
+// ─── SOUND ───────────────────────────────────────────────────────────────────
+let audioCtx = null;
+function beep(freq, dur = 0.12, type = 'square', vol = 0.08, when = 0) {
+  if (!save.sound) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t = audioCtx.currentTime + when;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t + dur);
+  } catch (e) {}
+}
+const sfx = {
+  correct: () => { beep(660, 0.08); beep(990, 0.12, 'square', 0.08, 0.08); },
+  wrong:   () => beep(160, 0.3, 'sawtooth', 0.08),
+  star:    () => beep(1320, 0.08, 'triangle', 0.1),
+  crash:   () => beep(90, 0.25, 'sawtooth', 0.12),
+  turbo:   () => { for (let i = 0; i < 6; i++) beep(300 + i * 120, 0.08, 'sawtooth', 0.06, i * 0.05); },
+  count:   () => beep(440, 0.15),
+  go:      () => beep(880, 0.4),
+  fanfare: () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.22, 'square', 0.08, i * 0.15)),
+};
+
+// ─── MENU ────────────────────────────────────────────────────────────────────
+function buildMenu() {
+  const grid = $('testGrid');
+  grid.innerHTML = '';
+  TESTS.forEach(t => {
+    const r = save.results[t.id];
+    const btn = document.createElement('button');
+    btn.className = 'test-btn' + (t.id === save.test ? ' selected' : '');
+    btn.innerHTML = `${t.id}<span class="tcar ${unlocked(t.id) ? '' : 'locked'}">${t.car.emoji}</span><small>${r ? 'best ' + r.bestScore + '/30' : ''}</small>`;
+    btn.addEventListener('click', () => { save.test = t.id; persist(); buildMenu(); });
+    grid.appendChild(btn);
+  });
+  const t = TESTS.find(x => x.id === save.test) || TESTS[1];
+  const r = save.results[t.id];
+  $('testInfo').textContent = `Test ${t.id}: ${TEST_DESC[t.id]}` + (r && r.bestTime ? ` · best time ${fmtTime(r.bestTime)}` : '');
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.toggle('selected', b.dataset.input === save.input));
+  $('menuCar').textContent = playerCar();
+  $('soundLink').textContent = save.sound ? '🔊 Sound on' : '🔇 Sound off';
+  $('playerName').value = save.name;
+  $('startBtn').textContent = `🏁 Start Test ${t.id}!`;
+}
+document.querySelectorAll('.opt-btn').forEach(b => b.addEventListener('click', () => { save.input = b.dataset.input; persist(); buildMenu(); }));
+$('playerName').addEventListener('input', e => { save.name = e.target.value.trim(); persist(); });
+$('soundLink').addEventListener('click', () => { save.sound = !save.sound; persist(); buildMenu(); sfx.correct(); });
+$('startBtn').addEventListener('click', startQuiz);
+$('garageLink').addEventListener('click', () => showGarage('menu'));
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+let quiz = null;
+function startQuiz() {
+  const test = TESTS.find(x => x.id === save.test) || TESTS[1];
+  const prev = save.results[test.id];
+  quiz = {
+    test, i: 0, correct: 0, streak: 0, bestStreak: 0, wrong: [],
+    typed: '', locked: false, start: performance.now(), elapsed: 0,
+    ghostTime: prev && prev.bestTime ? prev.bestTime : PACE_SECONDS, timer: null,
+  };
+  $('hudTest').textContent = test.id;
+  $('hudCorrect').textContent = '0';
+  $('hudStreak').textContent = '0';
+  $('ghostLabel').textContent = prev && prev.bestTime ? 'Your best' : 'Pace car';
+  $('stripPlayerCar').textContent = playerCar();
+  $('keypad').style.display = save.input === 'type' ? 'grid' : 'none';
+  $('choices').style.display = save.input === 'type' ? 'none' : 'grid';
+  $('answerDisplay').style.display = save.input === 'type' ? 'flex' : 'none';
+  showScreen('quiz');
+  showQuestion();
+  clearInterval(quiz.timer);
+  quiz.timer = setInterval(tickQuiz, 200);
+  tickQuiz();
+}
+function tickQuiz() {
+  quiz.elapsed = (performance.now() - quiz.start) / 1000;
+  $('hudTime').textContent = fmtTime(quiz.elapsed);
+  $('stripGhost').style.left = `calc(${Math.min(1, quiz.elapsed / quiz.ghostTime) * 100}% * 0.82)`;
+}
+function showQuestion() {
+  const q = quiz.test.questions[quiz.i];
+  quiz.typed = ''; quiz.locked = false;
+  $('qCount').textContent = `Question ${quiz.i + 1} of ${quiz.test.questions.length}`;
+  $('questionText').textContent = q.text;
+  $('feedback').textContent = '';
+  $('feedback').className = 'feedback';
+  $('answerDisplay').className = 'answer-display';
+  $('answerDisplay').textContent = '';
+  $('stripPlayer').style.left = `calc(${(quiz.i / quiz.test.questions.length) * 100}% * 0.82)`;
+  if (save.input === 'choice') buildChoices(q);
+}
+function buildChoices(q) {
+  const a = q.answer, isDec = !Number.isInteger(a) || quiz.test.id === '12';
+  const pool = isDec ? [a * 10, a / 10, a + 0.1, a - 0.1, a + 1, a * 2, a + 0.2, a / 2]
+                     : [a + 1, a - 1, a + 2, a - 2, a + 10, a - 10, a * 2, a * 10, a + 5, a + 3];
+  const opts = new Set();
+  const cands = pool.map(v => Math.round(v * 1000) / 1000).filter(v => v >= 0 && v !== a).sort(() => Math.random() - 0.5);
+  for (const c of cands) { if (opts.size < 3) opts.add(c); }
+  const all = [...opts, a].sort(() => Math.random() - 0.5);
+  const box = $('choices');
+  box.innerHTML = '';
+  all.forEach(v => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = v;
+    b.dataset.v = v;
+    b.addEventListener('click', () => submitAnswer(v, b));
+    box.appendChild(b);
+  });
+}
+function buildKeypad() {
+  const pad = $('keypad');
+  ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'].forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'key' + (k === '⌫' ? ' del' : '');
+    b.textContent = k;
+    b.addEventListener('click', () => pressKey(k));
+    pad.appendChild(b);
+  });
+  const go = document.createElement('button');
+  go.className = 'key go';
+  go.textContent = '✔ GO';
+  go.addEventListener('click', () => pressKey('Enter'));
+  pad.appendChild(go);
+}
+function pressKey(k) {
+  if (!quiz || quiz.locked || currentScreen !== 'quiz' || save.input !== 'type') return;
+  if (k === 'Enter') { if (quiz.typed !== '' && quiz.typed !== '.') submitAnswer(parseFloat(quiz.typed)); return; }
+  if (k === '⌫' || k === 'Backspace') quiz.typed = quiz.typed.slice(0, -1);
+  else if (k === '.') { if (!quiz.typed.includes('.')) quiz.typed += quiz.typed === '' ? '0.' : '.'; }
+  else if (/^\d$/.test(k) && quiz.typed.length < 6) quiz.typed += k;
+  $('answerDisplay').textContent = quiz.typed;
+}
+function submitAnswer(value, btn) {
+  if (quiz.locked) return;
+  quiz.locked = true;
+  const q = quiz.test.questions[quiz.i];
+  const ok = Math.abs(value - q.answer) < 1e-9;
+  const fb = $('feedback'), disp = $('answerDisplay');
+  if (ok) {
+    quiz.correct++; quiz.streak++;
+    quiz.bestStreak = Math.max(quiz.bestStreak, quiz.streak);
+    disp.classList.add('correct');
+    if (btn) btn.classList.add('correct');
+    fb.classList.add('good');
+    fb.textContent = quiz.streak >= 3 ? `🔥 ${quiz.streak} in a row!` : '✔ Correct!';
+    sfx.correct();
+  } else {
+    quiz.streak = 0;
+    quiz.wrong.push({ text: q.text, answer: q.answer, given: value });
+    disp.classList.add('wrong');
+    if (btn) btn.classList.add('wrong');
+    document.querySelectorAll('.choice').forEach(c => { if (+c.dataset.v === q.answer) c.classList.add('correct'); });
+    fb.textContent = `${q.text} = ${q.answer}`;
+    sfx.wrong();
+  }
+  $('hudCorrect').textContent = quiz.correct;
+  $('hudStreak').textContent = quiz.streak;
+  quiz.i++;
+  $('stripPlayer').style.left = `calc(${(quiz.i / quiz.test.questions.length) * 100}% * 0.82)`;
+  setTimeout(() => {
+    if (currentScreen !== 'quiz') return;
+    if (quiz.i >= quiz.test.questions.length) finishQuiz(); else showQuestion();
+  }, ok ? 550 : 1700);
+}
+function finishQuiz() {
+  clearInterval(quiz.timer);
+  quiz.elapsed = (performance.now() - quiz.start) / 1000;
+  quiz.beatGhost = quiz.elapsed < quiz.ghostTime;
+  quiz.boosts = Math.floor(quiz.correct / 5) + (quiz.beatGhost ? 1 : 0);
+  $('pitScore').textContent = `${quiz.correct} / ${quiz.test.questions.length}`;
+  $('pitBoosts').textContent = '🚀'.repeat(quiz.boosts) || '—';
+  $('pitText').innerHTML =
+    `You finished in <b>${fmtTime(quiz.elapsed)}</b> and earned <b>${quiz.boosts} turbo boost${quiz.boosts === 1 ? '' : 's'}</b> for the Grand Prix` +
+    (quiz.beatGhost ? ' (one extra for beating the ghost car 👻!)' : '') +
+    `.<br><br>Every 5 correct answers = 1 turbo. Dodge the cones, grab the stars and win the race!`;
+  showScreen('pit');
+  sfx.fanfare();
+}
+$('quitBtn').addEventListener('click', () => { clearInterval(quiz.timer); buildMenu(); showScreen('menu'); });
+$('toRaceBtn').addEventListener('click', startRace);
+
+// ─── GRAND PRIX (canvas mini-game) ───────────────────────────────────────────
+const VW = 800, VH = 450;
+const ROAD_TOP = 190, ROAD_BOTTOM = 420, LANES = 3;
+const LANE_H = (ROAD_BOTTOM - ROAD_TOP) / LANES;
+const laneY = l => ROAD_TOP + LANE_H * (l + 0.5);
+const PLAYER_X = 150, BASE_SPEED = 430, RACE_LEN = BASE_SPEED * 30;
+const canvas = $('raceCanvas'), ctx = canvas.getContext('2d');
+let race = null;
+
+function buildCourse() {
+  const items = [];
+  let x = 900, row = 0;
+  while (x < RACE_LEN - 500) {
+    row++;
+    const free = Math.floor(Math.random() * LANES);
+    const double = Math.random() < 0.45;
+    const lanes = [0, 1, 2].filter(l => l !== free).sort(() => Math.random() - 0.5);
+    items.push({ x, lane: lanes[0], type: Math.random() < 0.25 ? 'oil' : 'cone' });
+    if (double) items.push({ x, lane: lanes[1], type: 'cone' });
+    const bonusLane = double ? free : (Math.random() < 0.5 ? free : lanes[1]);
+    if (row % 6 === 0) items.push({ x: x + 10, lane: bonusLane, type: 'bolt' });
+    else if (Math.random() < 0.75) items.push({ x: x + 10, lane: bonusLane, type: 'star' });
+    if (Math.random() < 0.5) items.push({ x: x + 170, lane: Math.floor(Math.random() * LANES), type: 'star' });
+    x += 330 + Math.random() * 160;
+  }
+  return items;
+}
+
+function startRace() {
+  const rivalCars = ['🚗', '🚙', '🏎️', '🚓', '🚕', '🛻'].filter(c => c !== playerCar()).sort(() => Math.random() - 0.5);
+  race = {
+    state: 'countdown', t: 0, countdown: 3.2, lastCount: 4,
+    dist: 0, lane: 1, y: laneY(1), speedMult: 1,
+    slowUntil: 0, safeUntil: 0, turboUntil: 0,
+    turbos: quiz.boosts, stars: 0, hits: 0,
+    items: buildCourse(), particles: [], popups: [],
+    rivals: [
+      { emoji: rivalCars[0], dist: 0, speed: BASE_SPEED * 0.9,  y: 118, wob: Math.random() * 6 },
+      { emoji: rivalCars[1], dist: 0, speed: BASE_SPEED * 0.98, y: 140, wob: Math.random() * 6 },
+      { emoji: rivalCars[2], dist: 0, speed: BASE_SPEED * 1.05, y: 162, wob: Math.random() * 6 },
+    ],
+    finishedAhead: 0, position: 1, finishT: 0, last: performance.now(), shake: 0,
+  };
+  showScreen('race');
+  resizeCanvas();
+  updateTurboBtn();
+  requestAnimationFrame(raceFrame);
+}
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w) return;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+}
+window.addEventListener('resize', () => { if (currentScreen === 'race') resizeCanvas(); });
+
+function updateTurboBtn() {
+  $('turboCount').textContent = 'x' + race.turbos;
+  $('turboBtn').disabled = race.turbos <= 0;
+}
+function steer(dir) {
+  if (!race || race.state === 'finished') return;
+  race.lane = Math.max(0, Math.min(LANES - 1, race.lane + dir));
+}
+function fireTurbo() {
+  if (!race || race.state !== 'racing' || race.turbos <= 0 || race.t < race.turboUntil) return;
+  race.turbos--;
+  race.turboUntil = race.t + 1.7;
+  race.slowUntil = 0;
+  race.popups.push({ text: 'TURBO! 🚀', x: PLAYER_X + 60, y: race.y - 40, life: 1 });
+  sfx.turbo();
+  updateTurboBtn();
+}
+function bindPress(el, fn) {
+  el.addEventListener('pointerdown', e => { e.preventDefault(); fn(); });
+}
+bindPress($('upBtn'), () => steer(-1));
+bindPress($('downBtn'), () => steer(1));
+bindPress($('turboBtn'), fireTurbo);
+bindPress(canvas, () => {});
+canvas.addEventListener('pointerdown', e => {
+  const r = canvas.getBoundingClientRect();
+  steer((e.clientY - r.top) < r.height / 2 ? -1 : 1);
+});
+
+function raceFrame(now) {
+  if (currentScreen !== 'race' || !race) return;
+  const dt = Math.min(0.05, (now - race.last) / 1000);
+  race.last = now;
+  updateRace(dt);
+  drawRace();
+  requestAnimationFrame(raceFrame);
+}
+
+function updateRace(dt) {
+  const r = race;
+  if (r.state === 'countdown') {
+    r.countdown -= dt;
+    const n = Math.ceil(r.countdown);
+    if (n !== r.lastCount && n >= 1 && n <= 3) { r.lastCount = n; sfx.count(); }
+    if (r.countdown <= 0) { r.state = 'racing'; sfx.go(); }
+    r.y += (laneY(r.lane) - r.y) * Math.min(1, dt * 14);
+    return;
+  }
+  r.t += dt;
+  // player speed
+  const turbo = r.t < r.turboUntil, slow = r.t < r.slowUntil;
+  const target = r.state === 'finished' ? 0.6 : turbo ? 2.0 : slow ? 0.35 : 1;
+  r.speedMult += (target - r.speedMult) * Math.min(1, dt * (turbo ? 8 : 4));
+  r.dist += BASE_SPEED * r.speedMult * dt;
+  r.y += (laneY(r.lane) - r.y) * Math.min(1, dt * 14);
+  r.shake = Math.max(0, r.shake - dt);
+
+  // rivals
+  r.rivals.forEach(v => {
+    const wasDone = v.dist >= RACE_LEN;
+    v.dist += v.speed * (1 + 0.06 * Math.sin(r.t * 0.9 + v.wob)) * dt;
+    if (!wasDone && v.dist >= RACE_LEN && r.state === 'racing') r.finishedAhead++;
+  });
+  r.position = r.state === 'finished' ? r.finalPosition : 1 + r.rivals.filter(v => v.dist > r.dist).length;
+
+  // collisions and pick-ups
+  if (r.state === 'racing') {
+    for (const it of r.items) {
+      if (it.gone) continue;
+      const dx = it.x - r.dist;
+      if (dx < -200) { it.gone = true; continue; }
+      if (dx > 60) continue;
+      if (Math.abs(dx) < 42 && Math.abs(laneY(it.lane) - r.y) < LANE_H * 0.42) {
+        if (it.type === 'star') {
+          it.gone = true; r.stars++; sfx.star();
+          r.popups.push({ text: '+1 ⭐', x: PLAYER_X + 30, y: r.y - 30, life: 0.8 });
+        } else if (it.type === 'bolt') {
+          it.gone = true; r.turbos++; sfx.star(); updateTurboBtn();
+          r.popups.push({ text: '+1 TURBO ⚡', x: PLAYER_X + 30, y: r.y - 30, life: 1 });
+        } else if (turbo) {
+          it.gone = true; sfx.star();
+          r.popups.push({ text: 'SMASH! 💥', x: PLAYER_X + 40, y: r.y - 30, life: 0.8 });
+        } else if (r.t > r.safeUntil) {
+          it.gone = true; r.hits++;
+          r.slowUntil = r.t + 0.9; r.safeUntil = r.t + 1.3; r.shake = 0.35;
+          sfx.crash();
+          r.popups.push({ text: it.type === 'oil' ? 'SKID! 🌀' : 'CRASH! 💥', x: PLAYER_X + 40, y: r.y - 30, life: 0.9 });
+        }
+      }
+    }
+    if (r.dist >= RACE_LEN) {
+      r.state = 'finished';
+      r.finalPosition = 1 + r.finishedAhead;
+      r.position = r.finalPosition;
+      r.finishT = r.t;
+      if (r.finalPosition === 1) sfx.fanfare(); else sfx.go();
+      spawnConfetti(r.finalPosition === 1 ? 90 : 35);
+      setTimeout(showResults, 2600);
+    }
+  }
+  // exhaust / flame particles
+  if (Math.random() < (turbo ? 1 : 0.3)) {
+    r.particles.push({ x: PLAYER_X - 30, y: r.y + 8 + (Math.random() - 0.5) * 10, vx: -(200 + Math.random() * 200), life: turbo ? 0.5 : 0.35, turbo });
+  }
+  r.particles.forEach(p => { p.x += p.vx * dt; p.life -= dt; });
+  r.particles = r.particles.filter(p => p.life > 0);
+  r.popups.forEach(p => { p.y -= 50 * dt; p.life -= dt; });
+  r.popups = r.popups.filter(p => p.life > 0);
+}
+
+function emoji(e, x, y, size, flip) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (flip) ctx.scale(-1, 1);
+  ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(e, 0, 0);
+  ctx.restore();
+}
+function label(text, x, y, size, fill = '#fff', align = 'center') {
+  ctx.font = `900 ${size}px "Segoe UI",Arial,sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineWidth = Math.max(3, size / 7); ctx.strokeStyle = '#000'; ctx.lineJoin = 'round';
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = fill; ctx.fillText(text, x, y);
+}
+
+function drawRace() {
+  const r = race, s = canvas.width / VW;
+  ctx.setTransform(s, 0, 0, s, 0, 0);
+  const sx = r.shake > 0 ? (Math.random() - 0.5) * 10 : 0, sy = r.shake > 0 ? (Math.random() - 0.5) * 6 : 0;
+  ctx.translate(sx, sy);
+  const turbo = r.t < r.turboUntil && r.state !== 'countdown';
+
+  // sky + hills
+  const g = ctx.createLinearGradient(0, 0, 0, 110);
+  g.addColorStop(0, '#5fb4e8'); g.addColorStop(1, '#bfe6fa');
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, VW + 40, 130);
+  ctx.fillStyle = '#6fbf73';
+  for (let i = -1; i < 6; i++) {
+    const hx = i * 220 - (r.dist * 0.08) % 220;
+    ctx.beginPath(); ctx.ellipse(hx + 110, 104, 150, 46, 0, Math.PI, 0); ctx.fill();
+  }
+  for (let i = -1; i < 5; i++) emoji('☁️', i * 260 - (r.dist * 0.03) % 260 + 80, 28 + (i % 2) * 16, 34);
+  for (let i = -1; i < 9; i++) emoji(i % 3 ? '🌳' : '🏠', i * 130 - (r.dist * 0.3) % 130 + 30, 86, 30);
+
+  // grass
+  ctx.fillStyle = '#3a7d44'; ctx.fillRect(-20, 100, VW + 40, VH);
+  // rival road
+  ctx.fillStyle = '#666'; ctx.fillRect(-20, 104, VW + 40, 72);
+  // main road
+  ctx.fillStyle = '#4a4a4a'; ctx.fillRect(-20, ROAD_TOP, VW + 40, ROAD_BOTTOM - ROAD_TOP);
+  // kerbs
+  for (let i = -1; i < 12; i++) {
+    const kx = i * 80 - r.dist % 80;
+    ctx.fillStyle = '#e63946'; ctx.fillRect(kx, ROAD_TOP - 8, 40, 8); ctx.fillRect(kx, ROAD_BOTTOM, 40, 8);
+    ctx.fillStyle = '#fff'; ctx.fillRect(kx + 40, ROAD_TOP - 8, 40, 8); ctx.fillRect(kx + 40, ROAD_BOTTOM, 40, 8);
+  }
+  // lane dashes
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  for (let l = 1; l < LANES; l++) for (let i = -1; i < 9; i++) {
+    ctx.fillRect(i * 110 - r.dist % 110, ROAD_TOP + LANE_H * l - 3, 55, 6);
+  }
+  // start + finish lines
+  [0, RACE_LEN].forEach(wx => {
+    const fx = PLAYER_X + 30 + (wx - r.dist);
+    if (fx < -40 || fx > VW + 40) return;
+    for (let row = 0; row < 16; row++) for (let col = 0; col < 2; col++) {
+      ctx.fillStyle = (row + col) % 2 ? '#111' : '#fff';
+      ctx.fillRect(fx + col * 12, 104 + row * ((ROAD_BOTTOM - 104) / 16), 12, (ROAD_BOTTOM - 104) / 16);
+    }
+    if (wx) emoji('🏁', fx + 12, 92, 30);
+  });
+
+  // items
+  const icon = { cone: '🚧', oil: '🛢️', star: '⭐', bolt: '⚡' };
+  for (const it of r.items) {
+    if (it.gone) continue;
+    const ix = PLAYER_X + (it.x - r.dist);
+    if (ix < -50 || ix > VW + 50) continue;
+    const bob = it.type === 'star' || it.type === 'bolt' ? Math.sin(r.t * 6 + it.x) * 4 : 0;
+    emoji(icon[it.type], ix, laneY(it.lane) + bob, it.type === 'star' ? 34 : 42);
+  }
+
+  // rivals
+  r.rivals.forEach(v => {
+    const rx = PLAYER_X + (v.dist - r.dist);
+    if (rx > -60 && rx < VW + 60) emoji(v.emoji, rx, v.y + Math.sin(r.t * 20 + v.wob) * 1.5, 36, true);
+  });
+
+  // particles
+  r.particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life * 2);
+    ctx.fillStyle = p.turbo ? (Math.random() < 0.5 ? '#ffd700' : '#ff6b35') : '#ddd';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.turbo ? 9 : 5, 0, 7); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // speed lines
+  if (turbo) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3;
+    for (let i = 0; i < 9; i++) {
+      const ly = ROAD_TOP + Math.random() * (ROAD_BOTTOM - ROAD_TOP), lx = Math.random() * VW;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - 90, ly); ctx.stroke();
+    }
+  }
+
+  // player
+  const blink = r.t < r.safeUntil && Math.floor(r.t * 14) % 2;
+  if (!blink) {
+    if (turbo) emoji('🔥', PLAYER_X - 44, r.y + 4, 34);
+    emoji(playerCar(), PLAYER_X, r.y + Math.sin(r.t * 24) * 1.5, 58, true);
+  }
+
+  // popups
+  r.popups.forEach(p => { ctx.globalAlpha = Math.min(1, p.life * 2); label(p.text, p.x, p.y, 24, '#ffd700'); });
+  ctx.globalAlpha = 1;
+
+  // HUD: progress bar
+  ctx.setTransform(s, 0, 0, s, 0, 0);
+  const bx = 150, bw = 500, by = 14;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx - 12, by - 9, bw + 24, 18, 9) : ctx.rect(bx - 12, by - 9, bw + 24, 18); ctx.fill();
+  r.rivals.forEach(v => emoji(v.emoji, bx + Math.min(1, v.dist / RACE_LEN) * bw, by, 15, true));
+  emoji(playerCar(), bx + Math.min(1, r.dist / RACE_LEN) * bw, by, 22, true);
+  emoji('🏁', bx + bw + 24, by, 18);
+  label(ordinal(r.position), 14, 22, 34, r.position === 1 ? '#ffd700' : '#fff', 'left');
+  label(`⭐ ${r.stars}`, VW - 14, 20, 24, '#fff', 'right');
+
+  // countdown / finish text
+  if (r.state === 'countdown') {
+    const n = Math.ceil(r.countdown);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, 0, VW, VH);
+    label(n > 3 ? 'Get ready!' : String(n), VW / 2, VH / 2, n > 3 ? 60 : 130, '#ffd700');
+    label('▲ ▼ to dodge   ·   🚀 for turbo', VW / 2, VH - 50, 24);
+  } else if (r.t < 0.8) {
+    label('GO!', VW / 2, VH / 2, 130, '#7ef07e');
+  } else if (r.state === 'finished') {
+    const msg = ['🏆 YOU WIN! 🏆', '🥈 2nd place!', '🥉 3rd place!', '🏁 Finished 4th'][r.finalPosition - 1];
+    label(msg, VW / 2, VH / 2 - 40, 62, '#ffd700');
+  }
+}
+
+function spawnConfetti(n) {
+  const colors = ['#ff6b35', '#ffd700', '#4caf50', '#2196f3', '#e91e63', '#9c27b0', '#fff'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const size = 6 + Math.random() * 10;
+    p.style.cssText = `left:${Math.random() * 100}vw;width:${size}px;height:${size}px;background:${colors[i % colors.length]};` +
+      `border-radius:${Math.random() > 0.5 ? '50%' : '3px'};animation-duration:${1.6 + Math.random() * 2}s;animation-delay:${Math.random() * 0.6}s`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 4500);
+  }
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function showResults() {
+  if (currentScreen !== 'race') return;
+  const t = quiz.test, total = t.questions.length, pos = race.finalPosition;
+  const prev = save.results[t.id] || { bestScore: 0, bestTime: null, car: false, bestPos: 4 };
+  const badges = [];
+  if (quiz.correct === total) badges.push('💯 TEST PASSED!');
+  if (quiz.correct > prev.bestScore && prev.bestScore > 0) badges.push('📈 New best score!');
+  if (quiz.correct >= prev.bestScore && (prev.bestTime === null || quiz.elapsed < prev.bestTime)) {
+    if (prev.bestTime !== null && quiz.correct === prev.bestScore) badges.push('⏱️ New best time!');
+  }
+  if (pos === 1) badges.push('🏆 Grand Prix winner!');
+  if (race.hits === 0) badges.push('🧼 Clean race - no crashes!');
+
+  const newCar = quiz.correct >= UNLOCK_SCORE && !prev.car;
+  // best time is the time of the best-scoring run (faster run wins a tie)
+  let bestScore = prev.bestScore, bestTime = prev.bestTime;
+  if (quiz.correct > bestScore || (quiz.correct === bestScore && (bestTime === null || quiz.elapsed < bestTime))) {
+    bestScore = quiz.correct; bestTime = Math.round(quiz.elapsed * 10) / 10;
+  }
+  save.results[t.id] = { bestScore, bestTime, car: prev.car || quiz.correct >= UNLOCK_SCORE, bestPos: Math.min(prev.bestPos || 4, pos) };
+  save.stars += race.stars;
+  if (newCar) save.car = t.car.emoji;
+  persist();
+
+  $('resTrophy').textContent = ['🏆', '🥈', '🥉', '🏁'][pos - 1];
+  $('resTitle').textContent = `${save.name ? save.name + ' — ' : ''}Test ${t.id} done!`;
+  $('resBadges').innerHTML = badges.map(b => `<span class="badge">${b}</span>`).join('');
+  $('resScore').textContent = `${quiz.correct}/${total}`;
+  $('resTime').textContent = fmtTime(quiz.elapsed);
+  $('resStreak').textContent = quiz.bestStreak;
+  $('resPos').textContent = ordinal(pos);
+  $('resStars').textContent = race.stars;
+  $('resTotalStars').textContent = save.stars;
+
+  const award = $('carAward');
+  award.style.display = 'block';
+  $('carAwardEmoji').textContent = t.car.emoji;
+  $('carAwardName').textContent = t.car.name;
+  if (newCar) {
+    $('carAwardLabel').textContent = '✨ New car unlocked!';
+    $('carAwardDesc').textContent = t.car.desc;
+    $('carAwardEmoji').style.filter = '';
+  } else if (prev.car) {
+    $('carAwardLabel').textContent = '🏆 Car already in your garage';
+    $('carAwardDesc').textContent = t.car.desc;
+    $('carAwardEmoji').style.filter = '';
+  } else {
+    $('carAwardLabel').textContent = '🔒 Car still locked';
+    $('carAwardDesc').textContent = `Pass the test with ${UNLOCK_SCORE} out of ${total} to win it — only ${UNLOCK_SCORE - quiz.correct} more!`;
+    $('carAwardEmoji').style.filter = 'grayscale(1) opacity(0.4)';
+  }
+
+  $('mistakes').style.display = quiz.wrong.length ? 'block' : 'none';
+  $('mistakeList').innerHTML = quiz.wrong.map(w =>
+    `<div class="mistake">${w.text} = ${w.answer}<small>you said ${w.given}</small></div>`).join('');
+
+  $('nextBtn').style.display = t.index < TESTS.length - 1 ? '' : 'none';
+  showScreen('result');
+}
+$('againBtn').addEventListener('click', startQuiz);
+$('nextBtn').addEventListener('click', () => {
+  save.test = TESTS[Math.min(TESTS.length - 1, quiz.test.index + 1)].id; persist(); startQuiz();
+});
+$('resMenuBtn').addEventListener('click', () => { buildMenu(); showScreen('menu'); });
+$('resGarageBtn').addEventListener('click', () => showGarage('result'));
+
+// ─── GARAGE ──────────────────────────────────────────────────────────────────
+let garageReturn = 'menu';
+function showGarage(from) {
+  if (from) garageReturn = from;
+  const grid = $('garageGrid');
+  grid.innerHTML = '';
+  let count = 0;
+  TESTS.forEach(t => {
+    const has = unlocked(t.id);
+    if (has) count++;
+    const div = document.createElement('div');
+    div.className = `garage-car ${has ? 'unlocked' : 'locked'}${has && save.car === t.car.emoji ? ' chosen' : ''}`;
+    div.innerHTML = `<span class="garage-car-emoji">${t.car.emoji}</span>
+      <div class="garage-car-name">${has ? t.car.name : '???'}</div>
+      <div class="garage-car-test">${has ? 'Won on' : '🔒'} Test ${t.id}</div>`;
+    if (has) div.addEventListener('click', () => { save.car = t.car.emoji; persist(); showGarage(); });
+    grid.appendChild(div);
+  });
+  $('garageNote').textContent = `${count} / ${TESTS.length} cars · ${save.stars} ⭐ collected · Pass a test (${UNLOCK_SCORE}/30) to win its car. Tap a car to drive it!`;
+  showScreen('garage');
+}
+$('garageBackBtn').addEventListener('click', () => { buildMenu(); showScreen(garageReturn); });
+
+// ─── KEYBOARD ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (currentScreen === 'quiz') {
+    if (save.input === 'type') {
+      if (/^\d$/.test(e.key) || e.key === '.' || e.key === 'Backspace' || e.key === 'Enter') { e.preventDefault(); pressKey(e.key); }
+    } else if (['1', '2', '3', '4'].includes(e.key)) {
+      const b = document.querySelectorAll('.choice')[+e.key - 1];
+      if (b) b.click();
+    }
+  } else if (currentScreen === 'race') {
+    if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); steer(-1); }
+    else if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); steer(1); }
+    else if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); fireTurbo(); }
+  } else if (currentScreen === 'pit' && e.key === 'Enter') {
+    startRace();
+  }
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildKeypad();
+buildMenu();
+</script>
+</body>
+</html>
