@@ -10,7 +10,7 @@ A car-racing times tables game for kids — answer maths questions to race to th
 
 ## Test Trainer
 
-`tests/index.html` is a separate version that runs the weekly school tests (1, 1a, 2, 2a … 12) with all 30 questions in the exact printed order. Answers are typed on a number pad (or picked from 4 choices). You race a ghost of your best time during the test, then earn turbo boosts (1 per 5 correct) for a Grand Prix mini-game: steer between lanes, dodge cones, grab stars and beat three rivals. Scoring 27+/30 unlocks that test's car.
+`tests/index.html` is a separate version that runs the weekly school tests (1, 1a, 2, 2a … 12) with all 30 questions in the exact printed order. Answers are typed on a number pad (or picked from 4 choices). You race a ghost of your best time during the test, then earn turbo boosts (1 per 5 correct) for a Grand Prix mini-game: steer between lanes, dodge cones, grab stars and beat three rivals. Passing a test with 30/30 (the school pass mark) unlocks that test's car.
 
 ## How to play
 

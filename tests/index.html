@@ -397,7 +397,7 @@ const CARS = [
   { emoji: '🛸', name: 'Alien UFO Supreme',  desc: 'Out of this world! 👽' },
 ];
 const STARTER_CAR = '🛹';
-const UNLOCK_SCORE = 27;      // out of 30 to win the test's car
+const UNLOCK_SCORE = 30;      // school pass mark is 100%: all 30 right wins the test's car
 const PACE_SECONDS = 150;     // pace car time when there is no best time yet (5s a question)
 
 function parseQuestion(src) {
@@ -938,7 +938,7 @@ function showResults() {
   const t = quiz.test, total = t.questions.length, pos = race.finalPosition;
   const prev = save.results[t.id] || { bestScore: 0, bestTime: null, car: false, bestPos: 4 };
   const badges = [];
-  if (quiz.correct === total) badges.push('💯 PERFECT TEST!');
+  if (quiz.correct === total) badges.push('💯 TEST PASSED!');
   if (quiz.correct > prev.bestScore && prev.bestScore > 0) badges.push('📈 New best score!');
   if (quiz.correct >= prev.bestScore && (prev.bestTime === null || quiz.elapsed < prev.bestTime)) {
     if (prev.bestTime !== null && quiz.correct === prev.bestScore) badges.push('⏱️ New best time!');
@@ -981,7 +981,7 @@ function showResults() {
     $('carAwardEmoji').style.filter = '';
   } else {
     $('carAwardLabel').textContent = '🔒 Car still locked';
-    $('carAwardDesc').textContent = `Get ${UNLOCK_SCORE} or more out of ${total} to win it — only ${UNLOCK_SCORE - quiz.correct} more!`;
+    $('carAwardDesc').textContent = `Pass the test with ${UNLOCK_SCORE} out of ${total} to win it — only ${UNLOCK_SCORE - quiz.correct} more!`;
     $('carAwardEmoji').style.filter = 'grayscale(1) opacity(0.4)';
   }
 
@@ -1017,7 +1017,7 @@ function showGarage(from) {
     if (has) div.addEventListener('click', () => { save.car = t.car.emoji; persist(); showGarage(); });
     grid.appendChild(div);
   });
-  $('garageNote').textContent = `${count} / ${TESTS.length} cars · ${save.stars} ⭐ collected · Score ${UNLOCK_SCORE}+ on a test to win its car. Tap a car to drive it!`;
+  $('garageNote').textContent = `${count} / ${TESTS.length} cars · ${save.stars} ⭐ collected · Pass a test (${UNLOCK_SCORE}/30) to win its car. Tap a car to drive it!`;
   showScreen('garage');
 }
 $('garageBackBtn').addEventListener('click', () => { buildMenu(); showScreen(garageReturn); });
